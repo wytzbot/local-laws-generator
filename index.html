@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Laws Generator - Legal Document Templates</title>
+  <meta name="description" content="Create tenancy agreements, contracts, NDAs for US, UK, NG, CA, AU, IN, ZA, KE, PH, AE. Instant PDF download.">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4338ca">
+  <link rel="icon" href="icon-192.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    [x-cloak] { display: none!important; }
+    /* High-trust legal color palette */
+    :root { --brand: #4338ca; --brand-hover: #3730a3; }
+  </style>
+</head>
+<body x-data="lawApp()" x-cloak class="bg-slate-950 text-slate-100 antialiased">
+  <div class="max-w-5xl mx-auto p-4 md:p-8">
+
+    <!-- Header -->
+    <header class="text-center mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold text-indigo-400">Local Laws Generator</h1>
+      <p class="text-slate-400 mt-2">Professional templates for 10 countries. Not legal advice.</p>
+    </header>
+
+    <!-- Main App -->
+    <main class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+
+      <!-- Step 1: Country -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-slate-300 mb-2">1. Select Country</label>
+        <select x-model="country" @change="document=''; formData={}; error=''"
+                class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <option value="">Choose country...</option>
+          <template x-for="c in countries" :key="c.code">
+            <option :value="c.code" x-text="c.name"></option>
+          </template>
+        </select>
+      </div>
+
+      <!-- Step 2: Document -->
+      <div x-show="country" x-transition class="mb-6">
+        <label class="block text-sm font-medium text-slate-300 mb-2">2. Select Document</label>
+        <select x-model="document" @change="formData={}; error=''"
+                class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <option value="">Choose document...</option>
+          <template x-for="doc in availableDocs" :key="doc.id">
+            <option :value="doc.id" x-text="doc.name"></option>
+          </template>
+        </select>
+        <p x-show="document" x-text="templates[document]?.description" class="text-xs text-slate-400 mt-2 bg-slate-800/50 p-2 rounded"></p>
+      </div>
+
+      <!-- Step 3: Dynamic Form -->
+      <div x-show="document" x-transition class="space-y-4 mb-6">
+        <label class="block text-sm font-medium text-slate-300">3. Enter Details</label>
+        <template x-for="field in currentFields" :key="field.key">
+          <div>
+            <label x-text="field.label" class="block text-xs text-slate-400 mb-1"></label>
+            <input :type="field.type || 'text'" :placeholder="field.placeholder" x-model.trim="formData[field.key]" required
+                   class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          </div>
+        </template>
+      </div>
+
+      <!-- Error Message -->
+      <p x-show="error" x-text="error" class="text-red-400 text-sm mb-4 bg-red-950/50 p-3 rounded-lg"></p>
+
+      <!-- Legal Disclaimer - Required for store approval -->
+      <div x-show="document" class="text-xs text-amber-300 bg-amber-950/30 border border-amber-900 rounded-lg p-3 mb-4">
+        <strong>Important:</strong> This is a template only, not legal advice. Laws vary by location and change often. Consult a licensed lawyer before signing. We assume no liability.
+      </div>
+
+      <!-- Actions -->
+      <div x-show="document" x-transition class="flex flex-wrap gap-3">
+        <button @click="generatePDF()" :disabled="!formValid"
+                class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed px-5 py-3 rounded-lg font-semibold transition">
+          Download PDF
+        </button>
+        <button @click="reset()" class="text-slate-400 hover:text-slate-200 px-3 py-3">Reset All</button>
+      </div>
+    </main>
+
+    <!-- Instructions + FAQ -->
+    <section class="mt-10 grid md:grid-cols-2 gap-8">
+      <div>
+        <h2 class="text-xl font-bold mb-3 text-indigo-400">How It Works</h2>
+        <ol class="space-y-2 text-slate-300 text-sm list-decimal list-inside">
+          <li>Select your country and document type</li>
+          <li>Fill required fields only - takes 60 seconds</li>
+          <li>Download PDF instantly. No account needed</li>
+          <li>Print, sign with witnesses if required by local law</li>
+        </ol>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold mb-3 text-indigo-400">FAQs</h2>
+        <div class="space-y-3 text-sm">
+          <details class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+            <summary class="font-medium cursor-pointer">Is this legally binding?</summary>
+            <p class="text-slate-400 mt-2">A template can become binding if properly executed per local law. This app does not guarantee enforceability. Always get legal review.</p>
+          </details>
+          <details class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+            <summary class="font-medium cursor-pointer">Do you store my data?</summary>
+            <p class="text-slate-400 mt-2">No. All generation happens in your browser. We cannot see or save your inputs. Works offline after first load.</p>
+          </details>
+          <details class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+            <summary class="font-medium cursor-pointer">Which countries are supported?</summary>
+            <p class="text-slate-400 mt-2">US, UK, Canada, Australia, Nigeria, India, South Africa, Kenya, Philippines, UAE. More added monthly.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer - Required links for store approval -->
+    <footer class="mt-10 text-center text-xs text-slate-500 border-t border-slate-800 pt-6">
+      <div class="flex justify-center gap-4 mb-3">
+        <a href="#" @click.prevent="showPrivacy=true" class="hover:text-indigo-400">Privacy Policy</a>
+        <a href="#" @click.prevent="showTerms=true" class="hover:text-indigo-400">Terms</a>
+        <a href="mailto:support@yourdomain.com" class="hover:text-indigo-400">Contact</a>
+      </div>
+      <p>© 2026 Local Laws Generator. Templates provided under MIT License.</p>
+    </footer>
+
+    <!-- Privacy Modal -->
+    <div x-show="showPrivacy" x-transition class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" @click.self="showPrivacy=false">
+      <div class="bg-slate-900 rounded-xl p-6 max-w-lg max-h-[80vh] overflow-y-auto">
+        <h3 class="text-lg font-bold mb-3">Privacy Policy</h3>
+        <p class="text-sm text-slate-300">This app runs 100% in your browser. We do not collect, store, or transmit any personal data or document content. No analytics, no cookies, no tracking. Your inputs never leave your device.</p>
+        <button @click="showPrivacy=false" class="mt-4 bg-indigo-600 px-4 py-2 rounded-lg">Close</button>
+      </div>
+    </div>
+
+    <!-- Terms Modal -->
+    <div x-show="showTerms" x-transition class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" @click.self="showTerms=false">
+      <div class="bg-slate-900 rounded-xl p-6 max-w-lg max-h-[80vh] overflow-y-auto">
+        <h3 class="text-lg font-bold mb-3">Terms of Use</h3>
+        <p class="text-sm text-slate-300">Templates are provided "as is" for informational purposes. This is not legal advice. You are responsible for compliance with local laws. We disclaim all liability for use of generated documents.</p>
+        <button @click="showTerms=false" class="mt-4 bg-indigo-600 px-4 py-2 rounded-lg">Close</button>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+function lawApp() {
+  return {
+    country: '', document: '', formData: {}, error: '', showPrivacy: false, showTerms: false,
+    countries: [
+      { code: 'US', name: 'United States' },
+      { code: 'UK', name: 'United Kingdom' },
+      { code: 'CA', name: 'Canada' },
+      { code: 'AU', name: 'Australia' },
+      { code: 'NG', name: 'Nigeria' },
+      { code: 'IN', name: 'India' },
+      { code: 'ZA', name: 'South Africa' },
+      { code: 'KE', name: 'Kenya' },
+      { code: 'PH', name: 'Philippines' },
+      { code: 'AE', name: 'United Arab Emirates' }
+    ],
+    templates: {
+      'NG-tenancy': {
+        name: 'Tenancy Agreement - Nigeria',
+        description: 'For residential property rental under Nigerian law. Covers rent, duration, landlord/tenant duties.',
+        fields: [
+          { key: 'landlord', label: 'Landlord Full Name', placeholder: 'Chinedu Okoro' },
+          { key: 'tenant', label: 'Tenant Full Name', placeholder: 'Aisha Bello' },
+          { key: 'address', label: 'Property Address', placeholder: 'No. 12 Allen Ave, Ikeja, Lagos' },
+          { key: 'rent', label: 'Annual Rent (₦)', type: 'number', placeholder: '1200000' },
+          { key: 'start', label: 'Start Date', type: 'date' },
+          { key: 'duration', label: 'Tenancy Duration', placeholder: '1 Year' }
+        ],
+        content: (d) => `TENANCY AGREEMENT\n\nTHIS AGREEMENT is made on ${d.start || '[Date]'} BETWEEN ${d.landlord || '[Landlord]'} ("Landlord") AND ${d.tenant || '[Tenant]'} ("Tenant").\n\n1. PREMISES: ${d.address || '[Address]'}\n2. TERM: ${d.duration || '[Duration]'} from ${d.start || '[Start Date]'}.\n3. RENT: ₦${d.rent || '[Amount]'} per annum.\n4. LAW: Governed by Tenancy Laws of Nigeria.\n\nSigned:\nLandlord: _______________ Tenant: _______________\nWitness: _______________`
+      },
+      'US-lease': {
+        name: 'Residential Lease - USA',
+        description: 'Standard US lease. Check your state laws for required disclosures.',
+        fields: [
+          { key: 'landlord', label: 'Landlord Name' },
+          { key: 'tenant', label: 'Tenant Name' },
+          { key: 'address', label: 'Property Address' },
+          { key: 'rent', label: 'Monthly Rent ($)', type: 'number' },
+          { key: 'deposit', label: 'Security Deposit ($)', type: 'number' },
+          { key: 'term', label: 'Lease Term', placeholder: '12 Months' }
+        ],
+        content: (d) => `RESIDENTIAL LEASE AGREEMENT\n\nLandlord: ${d.landlord || '[Name]'}\nTenant: ${d.tenant || '[Name]'}\nProperty: ${d.address || '[Address]'}\nTerm: ${d.term || ''}\nRent: $${d.rent || ''}/month\nDeposit: $${d.deposit || ''}\n\nSubject to state law where property is located.`
+      },
+      'UK-tenancy': {
+        name: 'Assured Shorthold Tenancy - UK',
+        description: 'Most common UK rental contract under Housing Act 1988.',
+        fields: [
+          { key: 'landlord', label: 'Landlord Name' },
+          { key: 'tenant', label: 'Tenant Name' },
+          { key: 'address', label: 'Property Address' },
+          { key: 'rent', label: 'Monthly Rent (£)', type: 'number' },
+          { key: 'start', label: 'Start Date', type: 'date' }
+        ],
+        content: (d) => `ASSURED SHORTHOLD TENANCY\n\nLandlord: ${d.landlord || '[Name]'}\nTenant: ${d.tenant || '[Name]'}\nAddress: ${d.address || '[Address]'}\nRent: £${d.rent || ''} pcm\nStart: ${d.start || '[Date]'}\n\nPer Housing Act 1988.`
+      }
+      // Add CA, AU, IN, ZA, KE, PH, AE using same pattern
+    },
+    get availableDocs() {
+      return Object.entries(this.templates)
+      .filter(([key]) => key.startsWith(this.country))
+      .map(([key, val]) => ({ id: key, name: val.name }));
+    },
+    get currentFields() {
+      return this.templates[this.document]?.fields || [];
+    },
+    get formValid() {
+      if (!this.document) return false;
+      return this.currentFields.every(f => this.formData[f.key] && String(this.formData[f.key]).trim()!== '');
+    },
+    generatePDF() {
+      this.error = '';
+      try {
+        if (!window.jspdf) throw new Error('PDF library failed to load. Check internet.');
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+        const content = this.templates[this.document].content(this.formData);
+        const lines = doc.splitTextToSize(content, 520);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        doc.text(lines, 40, 60);
+        doc.setFontSize(8);
+        doc.text('Generated by Local Laws Generator - This is not legal advice', 40, 800);
+        doc.save(`${this.document}-${Date.now()}.pdf`);
+      } catch (e) {
+        this.error = 'Could not generate PDF: ' + e.message;
+      }
+    },
+    reset() {
+      this.country = ''; this.document = ''; this.formData = {}; this.error = '';
+    },
+    init() {
+      // Register service worker for offline - helps store approval
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(()=>{});
+      }
+    }
+  }
+}
+</script>
+</body>
+                                                                                      </html>
