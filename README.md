@@ -2,7 +2,7 @@
 
 Generate country-specific legal document templates in 60 seconds. 100% free, runs offline, no data collection.
 
-**Live Demo**: https://yourname.github.io/local-laws-generator
+**Live Demo**: https://wytzboy.github.io/local-laws-generator
 
 ### Supported Countries
 US, UK, Canada, Australia, Nigeria, India, South Africa, Kenya, Philippines, UAE
