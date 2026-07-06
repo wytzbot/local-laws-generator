@@ -13,7 +13,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     [x-cloak] { display: none!important; }
-    /* High-trust legal color palette */
     :root { --brand: #4338ca; --brand-hover: #3730a3; }
   </style>
 </head>
@@ -69,14 +68,14 @@
       <!-- Error Message -->
       <p x-show="error" x-text="error" class="text-red-400 text-sm mb-4 bg-red-950/50 p-3 rounded-lg"></p>
 
-      <!-- Legal Disclaimer - Required for store approval -->
-      <div x-show="document" class="text-xs text-amber-300 bg-amber-950/30 border border-amber-900 rounded-lg p-3 mb-4">
+      <!-- Legal Disclaimer -->
+      <div x-show="document" class="text-xs text-amber-300 bg-amber-950/30 border-amber-900 rounded-lg p-3 mb-4">
         <strong>Important:</strong> This is a template only, not legal advice. Laws vary by location and change often. Consult a licensed lawyer before signing. We assume no liability.
       </div>
 
       <!-- Actions -->
       <div x-show="document" x-transition class="flex flex-wrap gap-3">
-        <button @click="generatePDF()" :disabled="!formValid"
+        <button @click="if(validateInput()) generatePDF()" :disabled="!formValid"
                 class="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed px-5 py-3 rounded-lg font-semibold transition">
           Download PDF
         </button>
@@ -90,7 +89,7 @@
         <h2 class="text-xl font-bold mb-3 text-indigo-400">How It Works</h2>
         <ol class="space-y-2 text-slate-300 text-sm list-decimal list-inside">
           <li>Select your country and document type</li>
-          <li>Fill required fields only - takes 60 seconds</li>
+          <li>Fill required fields - takes 60 seconds</li>
           <li>Download PDF instantly. No account needed</li>
           <li>Print, sign with witnesses if required by local law</li>
         </ol>
@@ -106,15 +105,11 @@
             <summary class="font-medium cursor-pointer">Do you store my data?</summary>
             <p class="text-slate-400 mt-2">No. All generation happens in your browser. We cannot see or save your inputs. Works offline after first load.</p>
           </details>
-          <details class="bg-slate-900 p-3 rounded-lg border border-slate-800">
-            <summary class="font-medium cursor-pointer">Which countries are supported?</summary>
-            <p class="text-slate-400 mt-2">US, UK, Canada, Australia, Nigeria, India, South Africa, Kenya, Philippines, UAE. More added monthly.</p>
-          </details>
         </div>
       </div>
     </section>
 
-    <!-- Footer - Required links for store approval -->
+    <!-- Footer -->
     <footer class="mt-10 text-center text-xs text-slate-500 border-t border-slate-800 pt-6">
       <div class="flex justify-center gap-4 mb-3">
         <a href="#" @click.prevent="showPrivacy=true" class="hover:text-indigo-400">Privacy Policy</a>
@@ -126,7 +121,7 @@
 
     <!-- Privacy Modal -->
     <div x-show="showPrivacy" x-transition class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" @click.self="showPrivacy=false">
-      <div class="bg-slate-900 rounded-xl p-6 max-w-lg max-h-[80vh] overflow-y-auto">
+      <div class="bg-slate-900 rounded-xl p-6 max-w-lg">
         <h3 class="text-lg font-bold mb-3">Privacy Policy</h3>
         <p class="text-sm text-slate-300">This app runs 100% in your browser. We do not collect, store, or transmit any personal data or document content. No analytics, no cookies, no tracking. Your inputs never leave your device.</p>
         <button @click="showPrivacy=false" class="mt-4 bg-indigo-600 px-4 py-2 rounded-lg">Close</button>
@@ -135,7 +130,7 @@
 
     <!-- Terms Modal -->
     <div x-show="showTerms" x-transition class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" @click.self="showTerms=false">
-      <div class="bg-slate-900 rounded-xl p-6 max-w-lg max-h-[80vh] overflow-y-auto">
+      <div class="bg-slate-900 rounded-xl p-6 max-w-lg">
         <h3 class="text-lg font-bold mb-3">Terms of Use</h3>
         <p class="text-sm text-slate-300">Templates are provided "as is" for informational purposes. This is not legal advice. You are responsible for compliance with local laws. We disclaim all liability for use of generated documents.</p>
         <button @click="showTerms=false" class="mt-4 bg-indigo-600 px-4 py-2 rounded-lg">Close</button>
@@ -149,21 +144,31 @@ function lawApp() {
   return {
     country: '', document: '', formData: {}, error: '', showPrivacy: false, showTerms: false,
     countries: [
-      { code: 'US', name: 'United States' },
-      { code: 'UK', name: 'United Kingdom' },
-      { code: 'CA', name: 'Canada' },
-      { code: 'AU', name: 'Australia' },
-      { code: 'NG', name: 'Nigeria' },
-      { code: 'IN', name: 'India' },
-      { code: 'ZA', name: 'South Africa' },
-      { code: 'KE', name: 'Kenya' },
-      { code: 'PH', name: 'Philippines' },
-      { code: 'AE', name: 'United Arab Emirates' }
+      { code: 'US', name: 'United States' }, { code: 'UK', name: 'United Kingdom' },
+      { code: 'CA', name: 'Canada' }, { code: 'AU', name: 'Australia' },
+      { code: 'NG', name: 'Nigeria' }, { code: 'IN', name: 'India' },
+      { code: 'ZA', name: 'South Africa' }, { code: 'KE', name: 'Kenya' },
+      { code: 'PH', name: 'Philippines' }, { code: 'AE', name: 'United Arab Emirates' }
     ],
     templates: {
+      // TENANCY/LEASE AGREEMENTS
+      'UK-tenancy': {
+        name: 'Assured Shorthold Tenancy - UK',
+        description: 'Standard AST under Housing Act 1988. England & Wales only.',
+        fields: [
+          { key: 'landlord', label: 'Landlord Full Legal Name', placeholder: 'John David Smith' },
+          { key: 'tenant', label: 'Tenant Full Legal Name', placeholder: 'Jane Mary Williams' },
+          { key: 'address', label: 'Property Address incl. Postcode', placeholder: 'Flat 5, 12 Baker St, London W1U 3BW' },
+          { key: 'rent', label: 'Monthly Rent (£)', type: 'number', placeholder: '1200' },
+          { key: 'deposit', label: 'Tenancy Deposit (£)', type: 'number', placeholder: '1200' },
+          { key: 'start', label: 'Tenancy Start Date', type: 'date' },
+          { key: 'term', label: 'Fixed Term Length', placeholder: '12 months' }
+        ],
+        content: (d) => `ASSURED SHORTHOLD TENANCY AGREEMENT\nHOUSING ACT 1988\n\nTHIS AGREEMENT is made on ${new Date().toLocaleDateString('en-GB')}\n\nBETWEEN:\nLandlord: ${d.landlord || '[LANDLORD NAME]'}\n\nAND\nTenant: ${d.tenant || '[TENANT NAME]'}\n\n1. PROPERTY\nThe Landlord lets to the Tenant the residential premises at:\n${d.address || '[FULL ADDRESS WITH POSTCODE]'}\n\n2. TERM\nA fixed term of ${d.term || ''} commencing on ${d.start? new Date(d.start).toLocaleDateString('en-GB') : '[START DATE]'}.\n\n3. RENT\n£${d.rent || '[AMOUNT]'} per calendar month, payable in advance on the ${d.start? new Date(d.start).getDate() : '[DAY]'} of each month.\n\n4. DEPOSIT\n£${d.deposit || '[AMOUNT]'} to be protected in a government-approved tenancy deposit scheme within 30 days.\n\n5. GOVERNING LAW\nThis agreement is governed by the laws of England and Wales.\n\nIMPORTANT: This is a template document and does not constitute legal advice.\nYou must comply with deposit protection, right to rent checks, and provide EPC, Gas Safety, and How to Rent guide. Consult a solicitor.\n\n\nSIGNED:\n\n\n_____________________________ Date: _______________\nLandlord: ${d.landlord || ''}\n\n\n_____________________________ Date: _______________\nTenant: ${d.tenant || ''}\n\n\n_____________________________ Date: _______________\nWitness Name & Address:\n\n\nGenerated by Local Laws Generator on ${new Date().toLocaleDateString('en-GB')}`
+      },
       'NG-tenancy': {
         name: 'Tenancy Agreement - Nigeria',
-        description: 'For residential property rental under Nigerian law. Covers rent, duration, landlord/tenant duties.',
+        description: 'For residential property under Nigerian Tenancy Law.',
         fields: [
           { key: 'landlord', label: 'Landlord Full Name', placeholder: 'Chinedu Okoro' },
           { key: 'tenant', label: 'Tenant Full Name', placeholder: 'Aisha Bello' },
@@ -172,76 +177,67 @@ function lawApp() {
           { key: 'start', label: 'Start Date', type: 'date' },
           { key: 'duration', label: 'Tenancy Duration', placeholder: '1 Year' }
         ],
-        content: (d) => `TENANCY AGREEMENT\n\nTHIS AGREEMENT is made on ${d.start || '[Date]'} BETWEEN ${d.landlord || '[Landlord]'} ("Landlord") AND ${d.tenant || '[Tenant]'} ("Tenant").\n\n1. PREMISES: ${d.address || '[Address]'}\n2. TERM: ${d.duration || '[Duration]'} from ${d.start || '[Start Date]'}.\n3. RENT: ₦${d.rent || '[Amount]'} per annum.\n4. LAW: Governed by Tenancy Laws of Nigeria.\n\nSigned:\nLandlord: _______________ Tenant: _______________\nWitness: _______________`
+        content: (d) => `TENANCY AGREEMENT\n\nTHIS AGREEMENT is made on ${d.start? new Date(d.start).toLocaleDateString('en-GB') : '[DATE]'} BETWEEN ${d.landlord || '[LANDLORD]'} ("Landlord") AND ${d.tenant || '[TENANT]'} ("Tenant").\n\n1. PREMISES: The Landlord agrees to let and the Tenant agrees to take the property at ${d.address || '[ADDRESS]'}.\n\n2. TERM: The tenancy shall be for a period of ${d.duration || '[DURATION]'} commencing ${d.start? new Date(d.start).toLocaleDateString('en-GB') : '[START DATE]'}.\n\n3. RENT: The rent shall be ₦${d.rent || '[AMOUNT]'} per annum, payable yearly in advance.\n\n4. GOVERNING LAW: This agreement shall be governed by the Tenancy Laws of the Federal Republic of Nigeria.\n\nIMPORTANT: This is a template and not legal advice. Ensure compliance with state tenancy laws. Consult a legal practitioner.\n\n\nIN WITNESS WHEREOF, the parties have executed this agreement.\n\n\n_____________________________ Date: _______________\nLandlord: ${d.landlord || ''}\n\n\n_____________________________ Date: _______________\nTenant: ${d.tenant || ''}\n\n\n_____________________________ Date: _______________\nWitness Name & Address:\n\n\nGenerated by Local Laws Generator on ${new Date().toLocaleDateString('en-GB')}`
       },
       'US-lease': {
-        name: 'Residential Lease - USA',
-        description: 'Standard US lease. Check your state laws for required disclosures.',
+        name: 'Residential Lease Agreement - USA',
+        description: 'Standard US lease. Check state-specific disclosures.',
         fields: [
-          { key: 'landlord', label: 'Landlord Name' },
-          { key: 'tenant', label: 'Tenant Name' },
-          { key: 'address', label: 'Property Address' },
-          { key: 'rent', label: 'Monthly Rent ($)', type: 'number' },
-          { key: 'deposit', label: 'Security Deposit ($)', type: 'number' },
-          { key: 'term', label: 'Lease Term', placeholder: '12 Months' }
+          { key: 'landlord', label: 'Landlord Name', placeholder: 'Robert Johnson' },
+          { key: 'tenant', label: 'Tenant Name', placeholder: 'Emily Davis' },
+          { key: 'address', label: 'Property Address', placeholder: '123 Main St, Apt 4B, New York, NY 10001' },
+          { key: 'rent', label: 'Monthly Rent ($)', type: 'number', placeholder: '2500' },
+          { key: 'deposit', label: 'Security Deposit ($)', type: 'number', placeholder: '2500' },
+          { key: 'term', label: 'Lease Term', placeholder: '12 Months' },
+          { key: 'start', label: 'Lease Start Date', type: 'date' }
         ],
-        content: (d) => `RESIDENTIAL LEASE AGREEMENT\n\nLandlord: ${d.landlord || '[Name]'}\nTenant: ${d.tenant || '[Name]'}\nProperty: ${d.address || '[Address]'}\nTerm: ${d.term || ''}\nRent: $${d.rent || ''}/month\nDeposit: $${d.deposit || ''}\n\nSubject to state law where property is located.`
+        content: (d) => `RESIDENTIAL LEASE AGREEMENT\n\nTHIS LEASE is entered into on ${new Date().toLocaleDateString('en-US')}\n\nPARTIES:\nLandlord: ${d.landlord || '[LANDLORD NAME]'}\nTenant: ${d.tenant || '[TENANT NAME]'}\n\n1. PROPERTY: Landlord leases to Tenant the premises located at ${d.address || '[ADDRESS]'}.\n\n2. TERM: The lease term is ${d.term || ''} beginning ${d.start? new Date(d.start).toLocaleDateString('en-US') : '[START DATE]'}.\n\n3. RENT: Tenant shall pay $${d.rent || '[AMOUNT]'} per month.\n\n4. SECURITY DEPOSIT: Tenant shall pay $${d.deposit || '[AMOUNT]'} as security deposit.\n\n5. GOVERNING LAW: This lease shall be governed by the laws of the State where the property is located.\n\nIMPORTANT: This is a template only. State laws vary. You may need to add lead paint disclosures, etc. This is not legal advice. Consult an attorney.\n\n\nSIGNATURES:\n\n\n_____________________________ Date: _______________\nLandlord: ${d.landlord || ''}\n\n\n_____________________________ Date: _______________\nTenant: ${d.tenant || ''}\n\n\nGenerated by Local Laws Generator on ${new Date().toLocaleDateString('en-US')}`
       },
-      'UK-tenancy': {
-        name: 'Assured Shorthold Tenancy - UK',
-        description: 'Most common UK rental contract under Housing Act 1988.',
+      'CA-lease': {
+        name: 'Residential Tenancy Agreement - Canada',
+        description: 'For use in most provinces. Check provincial rules.',
         fields: [
-          { key: 'landlord', label: 'Landlord Name' },
-          { key: 'tenant', label: 'Tenant Name' },
-          { key: 'address', label: 'Property Address' },
-          { key: 'rent', label: 'Monthly Rent (£)', type: 'number' },
+          { key: 'landlord', label: 'Landlord Name', placeholder: 'Michael Chen' },
+          { key: 'tenant', label: 'Tenant Name', placeholder: 'Sarah Singh' },
+          { key: 'address', label: 'Rental Unit Address', placeholder: 'Unit 101, 456 Queen St W, Toronto, ON M5V 2A9' },
+          { key: 'rent', label: 'Monthly Rent (CAD)', type: 'number', placeholder: '2200' },
+          { key: 'start', label: 'Tenancy Start Date', type: 'date' },
+          { key: 'term', label: 'Term', placeholder: '1 year fixed term' }
+        ],
+        content: (d) => `RESIDENTIAL TENANCY AGREEMENT\n\nLandlord: ${d.landlord || '[LANDLORD]'}\nTenant: ${d.tenant || '[TENANT]'}\n\n1. RENTAL UNIT: ${d.address || '[ADDRESS]'}\n\n2. TERM: ${d.term || ''} starting ${d.start? new Date(d.start).toLocaleDateString('en-CA') : '[START DATE]'}.\n\n3. RENT: CAD $${d.rent || '[AMOUNT]'} per month.\n\n4. GOVERNING LAW: Subject to the Residential Tenancies Act of the applicable Province.\n\nIMPORTANT: This is a template. Provincial laws differ. This is not legal advice. Consult a legal professional.\n\n\nSIGNED:\n\n\n_____________________________ Date: _______________\nLandlord: ${d.landlord || ''}\n\n\n_____________________________ Date: _______________\nTenant: ${d.tenant || ''}\n\n\nGenerated by Local Laws Generator on ${new Date().toLocaleDateString('en-CA')}`
+      },
+      'AU-lease': {
+        name: 'Residential Tenancy Agreement - Australia',
+        description: 'General template. Check state/territory legislation.',
+        fields: [
+          { key: 'landlord', label: 'Landlord/Lessor Name', placeholder: 'James Wilson' },
+          { key: 'tenant', label: 'Tenant Name', placeholder: 'Olivia Brown' },
+          { key: 'address', label: 'Premises Address', placeholder: '12/55 George St, Sydney NSW 2000' },
+          { key: 'rent', label: 'Rent per week (AUD)', type: 'number', placeholder: '650' },
+          { key: 'bond', label: 'Rental Bond (AUD)', type: 'number', placeholder: '2600' },
           { key: 'start', label: 'Start Date', type: 'date' }
         ],
-        content: (d) => `ASSURED SHORTHOLD TENANCY\n\nLandlord: ${d.landlord || '[Name]'}\nTenant: ${d.tenant || '[Name]'}\nAddress: ${d.address || '[Address]'}\nRent: £${d.rent || ''} pcm\nStart: ${d.start || '[Date]'}\n\nPer Housing Act 1988.`
-      }
-      // Add CA, AU, IN, ZA, KE, PH, AE using same pattern
-    },
-    get availableDocs() {
-      return Object.entries(this.templates)
-      .filter(([key]) => key.startsWith(this.country))
-      .map(([key, val]) => ({ id: key, name: val.name }));
-    },
-    get currentFields() {
-      return this.templates[this.document]?.fields || [];
-    },
-    get formValid() {
-      if (!this.document) return false;
-      return this.currentFields.every(f => this.formData[f.key] && String(this.formData[f.key]).trim()!== '');
-    },
-    generatePDF() {
-      this.error = '';
-      try {
-        if (!window.jspdf) throw new Error('PDF library failed to load. Check internet.');
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-        const content = this.templates[this.document].content(this.formData);
-        const lines = doc.splitTextToSize(content, 520);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(11);
-        doc.text(lines, 40, 60);
-        doc.setFontSize(8);
-        doc.text('Generated by Local Laws Generator - This is not legal advice', 40, 800);
-        doc.save(`${this.document}-${Date.now()}.pdf`);
-      } catch (e) {
-        this.error = 'Could not generate PDF: ' + e.message;
-      }
-    },
-    reset() {
-      this.country = ''; this.document = ''; this.formData = {}; this.error = '';
-    },
-    init() {
-      // Register service worker for offline - helps store approval
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(()=>{});
-      }
-    }
-  }
-}
-</script>
-</body>
-                                                                                      </html>
+        content: (d) => `RESIDENTIAL TENANCY AGREEMENT\n\nLessor: ${d.landlord || '[LESSOR]'}\nTenant: ${d.tenant || '[TENANT]'}\n\n1. PREMISES: ${d.address || '[ADDRESS]'}\n\n2. TERM: Commencing ${d.start? new Date(d.start).toLocaleDateString('en-AU') : '[START DATE]'}.\n\n3. RENT: AUD $${d.rent || '[AMOUNT]'} per week.\n\n4. BOND: AUD $${d.bond || '[AMOUNT]'} to be lodged with relevant state authority.\n\n5. GOVERNING LAW: Subject to Residential Tenancies Act of the relevant State/Territory.\n\nIMPORTANT: This is a template only. This is not legal advice. Consult a legal practitioner.\n\n\nEXECUTED:\n\n\n_____________________________ Date: _______________\nLessor: ${d.landlord || ''}\n\n\n_____________________________ Date: _______________\nTenant: ${d.tenant || ''}\n\n\nGenerated by Local Laws Generator on ${new Date().toLocaleDateString('en-AU')}`
+      },
+      'IN-rent': {
+        name: 'Rent Agreement - India',
+        description: '11-month agreement template. Stamp duty applies.',
+        fields: [
+          { key: 'landlord', label: 'Landlord Name', placeholder: 'Rajesh Kumar' },
+          { key: 'tenant', label: 'Tenant Name', placeholder: 'Priya Sharma' },
+          { key: 'address', label: 'Property Address', placeholder: 'B-203, Green Valley, Sector 45, Gurgaon, Haryana 122003' },
+          { key: 'rent', label: 'Monthly Rent (₹)', type: 'number', placeholder: '25000' },
+          { key: 'deposit', label: 'Security Deposit (₹)', type: 'number', placeholder: '50000' },
+          { key: 'start', label: 'Start Date', type: 'date' }
+        ],
+        content: (d) => `RENT AGREEMENT\n\nThis Rent Agreement is made on ${new Date().toLocaleDateString('en-IN')}\n\nBETWEEN ${d.landlord || '[LANDLORD]'} ("Landlord") AND ${d.tenant || '[TENANT]'} ("Tenant").\n\n1. PROPERTY: ${d.address || '[ADDRESS]'}\n\n2. TERM: 11 months from ${d.start? new Date(d.start).toLocaleDateString('en-IN') : '[START DATE]'}.\n\n3. RENT: ₹${d.rent || '[AMOUNT]'} per month.\n\n4. DEPOSIT: ₹${d.deposit || '[AMOUNT]'} interest-free security deposit.\n\n5. GOVERNING LAW: Laws of India and the State where property is located.\n\nIMPORTANT: This is a template. Not legal advice. Must be printed on stamp paper of requisite value and registered. Consult an advocate.\n\n\nSIGNED:\n\n\n_____________________________ Date: _______________\nLandlord: ${d.landlord || ''}\n\n\n_____________________________ Date: _______________\nTenant: ${d.tenant || ''}\n\n\n_____________________________ Date: _______________\nWitness 1 Name & Address:\n\n\n_____________________________ Date: _______________\nWitness 2 Name & Address:\n\n\nGenerated by Local Laws Generator on ${new Date().toLocaleDateString('en-IN')}`
+      },
+      'ZA-lease': {
+        name: 'Lease Agreement - South Africa',
+        description: 'Compliant with Rental Housing Act.',
+        fields: [
+          { key: 'landlord', label: 'Landlord Name', placeholder: 'Thabo Mbeki' },
+          { key: 'tenant', label: 'Tenant Name', placeholder: 'Nomsa Dlamini' },
+          { key: 'address', label: 'Property Address', placeholder: '22 Bree Street, Cape Town, 8001' },
+          { key: 'rent', label: 'Monthly Rent (R)', type: 'number', placeholder: '8500' },
+          { key: 'deposit', label: 'Deposit (R)', type: 'numb
